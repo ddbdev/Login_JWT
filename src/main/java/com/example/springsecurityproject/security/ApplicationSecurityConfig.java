@@ -1,53 +1,46 @@
+
 package com.example.springsecurityproject.security;
 
+import com.example.springsecurityproject.jwt.JwtTokenVerifier;
+import com.example.springsecurityproject.jwt.JwtUsernameAndPasswordAuthenticationFilter;
+import com.example.springsecurityproject.repository.TokenRepository;
+import com.example.springsecurityproject.repository.UserRepository;
+import com.example.springsecurityproject.service.TokenService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 
-import java.util.concurrent.TimeUnit;
-
-import static com.example.springsecurityproject.security.ApplicationUserPermission.COURSE_WRITE;
-import static com.example.springsecurityproject.security.ApplicationUserRole.*;
-import static org.springframework.http.HttpMethod.*;
+import static org.springframework.security.config.http.SessionCreationPolicy.*;
 
 @Slf4j
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@AllArgsConstructor
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
-
-    private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder){
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final TokenService tokenService;
+    private final TokenRepository tokenRepository;
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
         http
-                //.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) (per averlo abilitato)
-                .csrf().disable()
-                .authorizeRequests()
-                .antMatchers("/" ,"index").permitAll()
-                .antMatchers("/api/**").hasRole(STUDENT.name())
-                .anyRequest()
-                .authenticated()
+                .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and()
+                //.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) (per averlo abilitato)
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(tokenService,authenticationManager()))
+                .addFilterAfter(new JwtTokenVerifier(tokenRepository),JwtUsernameAndPasswordAuthenticationFilter.class)
+                .authorizeRequests()
+                .antMatchers("/register").permitAll()
+                .antMatchers("/management/**").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .csrf().disable();
+                /*
+                Form Based Login
                 .formLogin()
                     .loginPage("/login")
                     .permitAll()
@@ -67,9 +60,9 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID", "remember-me")
                     .logoutSuccessUrl("/login");
-
+                */
     }
-
+    /*
     @Override
     @Bean
     protected UserDetailsService userDetailsService() {
@@ -101,4 +94,6 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 marioUser
         );
     }
+*/
 }
+
