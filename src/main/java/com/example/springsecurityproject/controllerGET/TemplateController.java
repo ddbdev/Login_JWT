@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping(path = "/")
 public class TemplateController {
 
-    @GetMapping(path = "/login")
+    @GetMapping(path = "/")
     public String getLogin(){
-        return "login";
+        return "index";
     }
 
     @GetMapping(path = "/courses")

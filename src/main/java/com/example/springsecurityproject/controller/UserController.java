@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import java.net.URI;
 
 @RestController
@@ -44,13 +43,35 @@ public class UserController {
         }
         catch (NullPointerException e)
         {
+            String path = "/confirm?token=";
             UserEntity newUser = new UserEntity();
             newUser.setUsername(user);
             newUser.setPassword(password);
+            String confirmToken = newUser.getConfirmToken();
             userService.addUser(newUser);
+            URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path(path + confirmToken).toUriString());
+            setHeaders("User registered");
 
-            return setHeaders("User registered");
+            return ResponseEntity.ok().body("User registered, enable your account here: \n"+ uri +"");
 
+        }
+
+    }
+
+    @PostMapping("/confirm")
+    public ResponseEntity<String> confirmToken(@RequestParam("token") String token){
+
+        if (token.isEmpty())
+        {
+            return new ResponseEntity<>("Url non valido", HttpStatus.BAD_REQUEST);
+        }
+        if (userService.findToken(token).isEmpty())
+        {
+            return new ResponseEntity<>("Il token non esiste", HttpStatus.BAD_REQUEST);
+        }
+        else{
+            userService.setToken(token);
+            return new ResponseEntity<>("Token confermato", HttpStatus.CREATED);
         }
 
     }

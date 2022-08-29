@@ -6,6 +6,7 @@ import com.example.springsecurityproject.jwt.JwtUsernameAndPasswordAuthenticatio
 import com.example.springsecurityproject.repository.TokenRepository;
 import com.example.springsecurityproject.repository.UserRepository;
 import com.example.springsecurityproject.service.TokenService;
+import com.example.springsecurityproject.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.*;
 @AllArgsConstructor
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    private final UserService userService;
     private final TokenService tokenService;
     private final TokenRepository tokenRepository;
     @Override
@@ -32,10 +34,10 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 //.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) (per averlo abilitato)
                 .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(tokenService,authenticationManager()))
-                .addFilterAfter(new JwtTokenVerifier(tokenRepository),JwtUsernameAndPasswordAuthenticationFilter.class)
+                .addFilterAfter(new JwtTokenVerifier(tokenRepository,userService),JwtUsernameAndPasswordAuthenticationFilter.class)
                 .authorizeRequests()
-                .antMatchers("/register").permitAll()
-                .antMatchers("/management/**").permitAll()
+                .antMatchers("/register", "/confirm").permitAll()
+                .antMatchers("/management/**").hasRole("USER")
                 .anyRequest().authenticated()
                 .and()
                 .csrf().disable();

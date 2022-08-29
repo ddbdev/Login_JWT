@@ -13,7 +13,7 @@ import java.util.List;
 import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
 
 @RestController
-@RequestMapping("api/v1/students")
+@RequestMapping("/")
 public class StudentController {
 
     private static final List<Student> STUDENTS = Arrays.asList(
@@ -22,7 +22,7 @@ public class StudentController {
             new Student (3, "Mario")
     );
 
-    @GetMapping(path = "{studentId}")
+    @GetMapping(path = "/api/v1/students/{studentId}")
     public Student getStudent(@PathVariable("studentId") Integer studentId){
 
         return STUDENTS.stream()

@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.Key;
 import java.sql.Date;
 import java.time.LocalDate;
 
@@ -61,8 +62,7 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
 
-
-        SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         String secretKey = Encoders.BASE64.encode(key.getEncoded());
         tokenService.addToken(secretKey, (UserEntity) authResult.getPrincipal());
         String JWTtoken = Jwts.builder()
@@ -70,10 +70,12 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
                 .claim("authorities", authResult.getAuthorities())
                 .setIssuedAt(new java.util.Date())
                 .setExpiration(Date.valueOf(LocalDate.now().plusWeeks(2)))
-                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                .signWith(Keys.hmacShaKeyFor(key.getEncoded()))
                 .compact();
 
-
+        String username = authResult.getName();
+        String encryptedUser = Encoders.BASE64.encode(username.getBytes());
+        response.addHeader("Authenticated","AuthString" + encryptedUser);
         response.addHeader("Authorization", "Bearer" + JWTtoken);
     }
 }

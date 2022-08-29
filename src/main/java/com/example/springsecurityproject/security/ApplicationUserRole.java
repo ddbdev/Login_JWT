@@ -14,7 +14,7 @@ import static com.example.springsecurityproject.security.ApplicationUserPermissi
 @AllArgsConstructor
 @Getter
 public enum ApplicationUserRole {
-    STUDENT(Sets.newHashSet()),
+    USER(Sets.newHashSet()),
     ADMIN(Sets.newHashSet(COURSE_READ, COURSE_WRITE, STUDENT_READ, STUDENT_WRITE)),
     MODERATOR (Sets.newHashSet(COURSE_READ, STUDENT_READ));
 

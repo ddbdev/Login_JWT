@@ -1,15 +1,14 @@
 package com.example.springsecurityproject.entity;
-import lombok.AllArgsConstructor;
+import com.example.springsecurityproject.security.ApplicationUserRole;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import net.bytebuddy.utility.RandomString;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Collections;
 
 @Data
 @Entity(name = "users")
@@ -36,12 +35,16 @@ public class UserEntity implements UserDetails {
     @Column(nullable = false)
     private boolean isCredentialNonExpired = true;
     @Column(nullable = false)
-    private boolean isEnabled = true;
+    private boolean isEnabled = false;
+    private String confirmToken = RandomString.make(60);
+    @Column(nullable = false)
+    private LocalDate createdAt = LocalDate.now();
+    private LocalDate confirmedAt = null;
 
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("USER"));
+        return ApplicationUserRole.USER.getGrantedAuthorities();
     }
 
     @Override

@@ -3,9 +3,6 @@ package com.example.springsecurityproject.controller;
 
 import com.example.springsecurityproject.entity.Student;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -22,9 +19,8 @@ public class StudentManagementController {
     );
 
     @GetMapping
-    //@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
     public List<Student> getAllStudents(){
-        SecurityContextHolder.getContext().getAuthentication();
         System.out.println("getAllStudents");
         return STUDENTS;
     }
