@@ -18,7 +18,8 @@
 - [MySQL Connector](https://mvnrepository.com/artifact/mysql/mysql-connector-java)
 
 ## Roadmap
-Better view of the roles
+Better role management.
+Implementation of frontend (included but not working at the moment)
 
 ## Appendix
 
