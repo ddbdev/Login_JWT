@@ -42,8 +42,8 @@ public class UserService implements UserDetailsService {
     public String findToken(String token){
         UserEntity user = userRepository.findUserByConfirmToken(token);
 
-        if (user != null){
-            return "Non esiste questo token";
+        if (user == null){
+            return "Il token non esiste";
         }
         else {
             return "Token confermato";

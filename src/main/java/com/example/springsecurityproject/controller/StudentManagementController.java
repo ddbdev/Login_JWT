@@ -9,8 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping("management/api/v1/students")
-public class StudentManagementController {
+@RequestMapping("management/post")
+public class    StudentManagementController {
 
     private static final List<Student> STUDENTS = Arrays.asList(
             new Student (1, "Danilo Management"),
