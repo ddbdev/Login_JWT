@@ -2,6 +2,8 @@
 ## Features
 
 - Full working Login and Registration API system with implementation of JWT and confirmation token on the registration.
+- Full control of the role and the permission
+- Javadoc for better understanding of the code
 - Usage of [JJWT](https://github.com/jwtk/jjwt)
 
 
@@ -18,13 +20,13 @@
 - [MySQL Connector](https://mvnrepository.com/artifact/mysql/mysql-connector-java)
 
 ## Roadmap
-- Better role management.
-- Implementation of frontend (included but not working at the moment)
+- Better role management. (Released - 05/09/2022)
+- Implementation of frontend (Working in progress)
 
 ## Appendix
 
-I self taught me about Spring Boot at the moment, I'm trying to being full prepared for an incoming course.
-If you see any error/bug/bad code please report it and I'll check ASAP.
+I self-taught me about Spring Boot at the moment, I'm trying to being full prepared for an incoming course.
+If you see any error/bug/bad code please report it and I'll check as soon as possible.
 
 
 
