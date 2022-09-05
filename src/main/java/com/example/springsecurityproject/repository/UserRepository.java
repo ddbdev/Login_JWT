@@ -6,7 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 
+/**
+ * This is the repository of UserEntity that extends JpaRepository
+ */
+
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
+
+    UserEntity getReferenceById(Long id);
     UserEntity findUsersByUsername(String username);
     @Transactional
     @Modifying(clearAutomatically = true)

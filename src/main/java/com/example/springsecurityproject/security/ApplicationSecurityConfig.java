@@ -6,6 +6,7 @@ import com.example.springsecurityproject.jwt.JwtUsernameAndPasswordAuthenticatio
 import com.example.springsecurityproject.repository.TokenRepository;
 import com.example.springsecurityproject.repository.UserRepository;
 import com.example.springsecurityproject.service.TokenService;
+import com.example.springsecurityproject.service.UserPermissionService;
 import com.example.springsecurityproject.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,16 +19,27 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 import static org.springframework.security.config.http.SessionCreationPolicy.*;
 
+/**
+ * This class is going to set the configuration for the security
+ */
 @Slf4j
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableGlobalMethodSecurity(prePostEnabled = true) enable this if you put @PreAuthorize in controller
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserService userService;
     private final TokenService tokenService;
     private final TokenRepository tokenRepository;
+
+    /**
+     * The configure method manage all the request sent to the server, if you want more security remove the
+     * csrf.disabled() and remove the comment to .csrf().csrfTokenRepository...
+     * It's adding a filter for the authentication and a filter after everyrequest that is our JwtTokenVerifier.
+     * @param http HttpSecurity
+     * @throws Exception Exception
+     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
@@ -35,15 +47,23 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and()
                 //.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) (per averlo abilitato)
-                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(tokenService,authenticationManager()))
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(
+                        tokenService,
+                        authenticationManager()
+                        )
+                )
                 .addFilterAfter(new JwtTokenVerifier(tokenRepository,userService),JwtUsernameAndPasswordAuthenticationFilter.class)
                 .authorizeRequests()
-                .antMatchers("/","/assets/**","/js/**","/css/**","/register", "/confirm").permitAll()
-                .antMatchers("/management/**").hasRole("USER")
+                .antMatchers("/","/register", "/confirm", "/login").permitAll()
+                .antMatchers("/courses/**").hasRole("USER")
+                .antMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .csrf().disable();
-                /*
+                /* This is only for managing the login with a login form, not using at the moment since i'm working with
+                Postman
+
+
                 Form Based Login
                 .formLogin()
                     .loginPage("/login")
@@ -66,38 +86,6 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                     .logoutSuccessUrl("/login");
                 */
     }
-    /*
-    @Override
-    @Bean
-    protected UserDetailsService userDetailsService() {
 
-        UserDetails vitoUser = User.builder()
-                .username("vito")
-                .password(passwordEncoder.encode("password"))
-                //.roles(STUDENT.name())
-                .authorities(STUDENT.getGrantedAuthorities())
-                .build();
-
-        UserDetails ddbdevUser = User.builder()
-                .username("ddbdev")
-                .password(passwordEncoder.encode("password"))
-                //.roles(ADMIN.name())
-                .authorities(ADMIN.getGrantedAuthorities())
-                .build();
-
-        UserDetails marioUser = User.builder()
-                .username("benmar")
-                .password(passwordEncoder.encode("password"))
-                //.roles(MODERATOR.name())
-                .authorities(MODERATOR.getGrantedAuthorities())
-                .build();
-
-        return new InMemoryUserDetailsManager(
-                ddbdevUser,
-                vitoUser,
-                marioUser
-        );
-    }
-*/
 }
 

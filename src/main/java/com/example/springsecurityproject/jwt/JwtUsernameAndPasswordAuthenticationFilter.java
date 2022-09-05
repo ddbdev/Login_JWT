@@ -1,7 +1,6 @@
 package com.example.springsecurityproject.jwt;
 
 import com.example.springsecurityproject.entity.UserEntity;
-import com.example.springsecurityproject.repository.UserRepository;
 import com.example.springsecurityproject.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
@@ -9,21 +8,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
-import org.checkerframework.checker.units.qual.A;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import javax.crypto.SecretKey;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -33,13 +22,25 @@ import java.security.Key;
 import java.sql.Date;
 import java.time.LocalDate;
 
+/**
+ * This is our AuthenticationFilter, that will be executed at the login.
+ * If the user exists it'll authenticate it and return a JWT with every requested claims for it.
+ */
 @AllArgsConstructor
 public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private TokenService tokenService;
     private AuthenticationManager authenticationManager;
 
-
+    /**
+     * This method is executed - as the name says - when a client is trying to log-in via /login
+     * It'll return an Authentication based if the user exists, if it doesn't exist, nothing will happen.
+     * If the user exists and authentication success it'll be forwarded to the next method, successfulAuthentication();
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @return Authentication
+     * @throws AuthenticationException Authentication
+     */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
@@ -59,8 +60,25 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
         }
     }
 
+    /**
+     * Once the authentication has been redirected here the method will create a new JWT with the details of the authenticated user.
+     * This method also add into the token_entity table the secret key encrypted in base64 so every user has a different key,
+     * that will guarantee a major security since if a hacker steal somehow a secret key it'll be only for that specific user and not
+     * for all users.
+     * After that it'll add headers to the response:
+     * - Authenticated : "AuthString" + username in base 64
+     * - Authorization : "Bearer" + the jwt token just created
+     *
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @param chain FilterChain
+     * @param authResult Authentication
+     * @throws IOException Exception
+     * @throws ServletException Exception
+     */
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
+
 
         Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         String secretKey = Encoders.BASE64.encode(key.getEncoded());
@@ -77,5 +95,6 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
         String encryptedUser = Encoders.BASE64.encode(username.getBytes());
         response.addHeader("Authenticated","AuthString" + encryptedUser);
         response.addHeader("Authorization", "Bearer" + JWTtoken);
+
     }
 }

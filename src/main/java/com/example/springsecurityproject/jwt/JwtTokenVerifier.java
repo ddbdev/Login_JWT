@@ -7,15 +7,26 @@
     import com.google.common.base.Strings;
     import io.jsonwebtoken.*;
     import io.jsonwebtoken.io.Decoders;
-    import org.springframework.stereotype.Component;
+    import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+    import org.springframework.security.core.Authentication;
+    import org.springframework.security.core.authority.SimpleGrantedAuthority;
+    import org.springframework.security.core.context.SecurityContextHolder;
     import org.springframework.web.filter.OncePerRequestFilter;
     import javax.servlet.FilterChain;
     import javax.servlet.ServletException;
     import javax.servlet.http.HttpServletRequest;
     import javax.servlet.http.HttpServletResponse;
     import java.io.IOException;
+    import java.util.List;
+    import java.util.Map;
+    import java.util.Set;
+    import java.util.stream.Collectors;
 
 
+    /**
+     * This will be our JwtTokenVerifier that will - as the name suggest - verify our token for every request has been
+     * submitted to the server.
+     */
     public class JwtTokenVerifier extends OncePerRequestFilter {
         private final TokenRepository tokenRepository;
         private final UserService userService;
@@ -25,6 +36,21 @@
             this.userService = userService;
         }
 
+        /**
+         * This method is going to be executed for every request submitted to the server, it'll check the headers of the
+         * request and will take 2 values from it if it exists, if it doesn't exist, the request is going to be FORBIDDEN.
+         * The "Authorization" header will store our JWT token created on "JwtUsernameAndPasswordAuthenticationFilter" filter
+         * The "Authenticated" header will store the Base64 String of the username that made the request, that will be used
+         * to get the key stored at the login in the Token_Entity table.
+         * After some conditions, if the token is verified it'll return our requested page (if you have authorization to see that page)
+         * if it's not verified it'll throw a JwtException.
+         *
+         * @param request HttpServletRequest
+         * @param response HttpServletResponse
+         * @param filterChain FilterChain
+         * @throws ServletException Exception
+         * @throws IOException Exception
+         */
         @Override
         protected void doFilterInternal(HttpServletRequest request,
                                         HttpServletResponse response,
@@ -44,13 +70,22 @@
                 TokenEntity instance = tokenRepository.getKeyByUser((UserEntity) userService.loadUserByUsername(finalUser));
                 byte[] key = Decoders.BASE64.decode(instance.getToken());
                 Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+                String username = claimsJws.getBody().getSubject();
+                var authorities = (List<Map<String, String>>) claimsJws.getBody().get("authorities");
+                Set<SimpleGrantedAuthority> authority = authorities.stream()
+                        .map(m -> new SimpleGrantedAuthority(m.get("authority")))
+                        .collect(Collectors.toSet());
 
-                System.out.println(claimsJws.getHeader() + " " + claimsJws.getBody() + " " + claimsJws.getSignature());
-
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        authority
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
             catch (JwtException e){
                 throw new IllegalStateException("Token non verificato");
             }
-
+            filterChain.doFilter(request,response);
         }
     }
